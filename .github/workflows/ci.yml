@@ -7,16 +7,36 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:e2e
+
+  runtime-node20:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Smoke test built CLI on Node 20
+        run: |
+          node --version
+          node dist/cli.mjs --help
+          FAKE_HOME="$(mktemp -d)"
+          mkdir -p "$FAKE_HOME/.npm/_cacache" "$FAKE_HOME/projects"
+          head -c 307200 /dev/zero > "$FAKE_HOME/.npm/_cacache/blob"
+          HOME="$FAKE_HOME" node dist/cli.mjs --yes --dry-run --out "$RUNNER_TEMP/report.html"
+          test -f "$FAKE_HOME/.npm/_cacache/blob"
+          grep -q "Tryb próbny" "$RUNNER_TEMP/report.html"
