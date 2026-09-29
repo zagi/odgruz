@@ -1,0 +1,4 @@
+.superpowers/
+node_modules/
+dist/
+odgruz-raport-*.html
