@@ -65,6 +65,11 @@ async function main(argv: string[]): Promise<number> {
     return 1
   }
 
+  if (!values.yes && !process.stdin.isTTY) {
+    console.error('Brak terminala interaktywnego. Użyj --yes (tylko cache) albo --dry-run --yes.')
+    return 1
+  }
+
   const dryRun = values['dry-run']
   const home = safeRealpath(homedir()) ?? homedir()
   const ctx: TargetContext = {
@@ -76,6 +81,7 @@ async function main(argv: string[]): Promise<number> {
     now: new Date(),
     selfPath: safeRealpath(process.argv[1]),
   }
+  const out = path.resolve(values.out ?? reportFileName(ctx.now))
   const volume = existsSync('/System/Volumes/Data') ? '/System/Volumes/Data' : '/'
 
   p.intro(pc.bold(dryRun ? 'odgruz · tryb próbny' : 'odgruz'))
@@ -120,9 +126,18 @@ async function main(argv: string[]): Promise<number> {
     }
   }
 
+  // Zanim cokolwiek usuniemy, upewnij się, że raport da się zapisać.
+  try {
+    await writeFile(out, '')
+  } catch (error) {
+    console.error(`Nie mogę zapisać raportu w ${out}: ${(error as Error).message}. Nic nie zostało usunięte.`)
+    return 1
+  }
+
+  spinner.start(dryRun ? 'Tryb próbny…' : 'Usuwam…')
   const outcomes = await clean(results, selected, { dryRun, roots: ctx })
+  spinner.stop('Gotowe')
   const after = await getDiskUsage(volume)
-  const out = path.resolve(values.out ?? reportFileName(ctx.now))
   await writeFile(out, renderReport({ generatedAt: ctx.now, before, after, results, outcomes, dryRun }))
 
   const failed = outcomes.flatMap((o) => o.failed)

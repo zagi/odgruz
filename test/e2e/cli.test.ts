@@ -68,6 +68,23 @@ describe('odgruz CLI', () => {
     expect(rowFor(html, 'Docker Sandboxes')).toContain('class="pill skipped"')
   })
 
+  it('refuses to delete when the report path is not writable', async () => {
+    const file = await seedNpmCache()
+    const r = run('--yes', '--out', path.join(path.dirname(out), 'missing-dir', 'r.html'))
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain('Nic nie zostało usunięte')
+    expect(existsSync(file)).toBe(true)
+  })
+
+  it('refuses a non-interactive run without --yes', async () => {
+    const file = await seedNpmCache()
+    const r = run('--out', out)
+    expect(r.status).toBe(1)
+    expect(r.stderr).toContain('--yes')
+    expect(existsSync(out)).toBe(false)
+    expect(existsSync(file)).toBe(true)
+  })
+
   it('handles an empty home', () => {
     const r = run('--yes', '--out', out)
     expect(r.status, r.stderr).toBe(0)
