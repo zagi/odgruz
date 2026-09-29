@@ -3,7 +3,7 @@ import { chmod, mkdir, mkdtemp, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { clean } from '../src/clean.js'
+import { clean, removableByHand } from '../src/clean.js'
 import type { TargetId } from '../src/messages/types.js'
 import type { SafeRoots, ScanResult } from '../src/types.js'
 
@@ -87,5 +87,16 @@ describe('clean', () => {
     await clean([result('node-modules', [link])], ['node-modules'], { dryRun: false, roots })
     expect(existsSync(link)).toBe(false)
     expect(existsSync(path.join(real, 'file'))).toBe(true)
+  })
+})
+
+describe('removableByHand', () => {
+  it('excludes guard-rejected paths', () => {
+    const failed = [
+      { path: '/a', error: 'EACCES' },
+      { path: '/b', error: '', code: 'outside-roots' as const },
+    ]
+    expect(removableByHand(failed)).toEqual([{ path: '/a', error: 'EACCES' }])
+    expect(removableByHand([failed[1]])).toEqual([])
   })
 })

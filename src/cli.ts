@@ -7,7 +7,7 @@ import path from 'node:path'
 import { parseArgs } from 'node:util'
 import * as p from '@clack/prompts'
 import pc from 'picocolors'
-import { clean } from './clean.js'
+import { clean, removableByHand } from './clean.js'
 import { getDiskUsage } from './disk.js'
 import { formatBytes } from './format.js'
 import { renderReport, reportFileName } from './report.js'
@@ -142,8 +142,8 @@ async function main(argv: string[]): Promise<number> {
   const after = await getDiskUsage(volume)
   await writeFile(out, renderReport({ generatedAt: ctx.now, before, after, results, outcomes, dryRun }, msgs))
 
-  const failed = outcomes.flatMap((o) => o.failed)
-  if (failed.length > 0) p.log.warn(msgs.cli.failedCount(failed.length))
+  const manualFailures = removableByHand(outcomes.flatMap((o) => o.failed))
+  if (manualFailures.length > 0) p.log.warn(msgs.cli.failedCount(manualFailures.length))
   const freed = Math.max(0, after.freeBytes - before.freeBytes)
   p.outro(
     dryRun

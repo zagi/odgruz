@@ -2,9 +2,14 @@ import { execFile } from 'node:child_process'
 import { rm } from 'node:fs/promises'
 import { promisify } from 'node:util'
 import { isSafeToDelete } from './paths.js'
-import type { CleanOutcome, SafeRoots, ScanResult } from './types.js'
+import type { CleanFailure, CleanOutcome, SafeRoots, ScanResult } from './types.js'
 
 const run = promisify(execFile)
+
+/** Niepowodzenia, które użytkownik może naprawić ręcznie (bez odrzuconych przez guard ścieżek). */
+export function removableByHand(failed: CleanFailure[]): CleanFailure[] {
+  return failed.filter((f) => f.code !== 'outside-roots')
+}
 
 export type Remover = (p: string) => Promise<void>
 
