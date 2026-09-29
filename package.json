@@ -1,0 +1,34 @@
+{
+  "name": "odgruz",
+  "version": "0.1.0",
+  "description": "Interaktywne sprzątanie dysku na macOS z raportem HTML przed i po",
+  "type": "module",
+  "bin": {
+    "odgruz": "dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "darwin"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsdown",
+    "prepare": "tsdown",
+    "test": "vitest run",
+    "test:e2e": "tsdown && vitest run --config vitest.e2e.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@clack/prompts": "^1.8.1",
+    "@types/node": "^26.6.3",
+    "picocolors": "^1.1.1",
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}
