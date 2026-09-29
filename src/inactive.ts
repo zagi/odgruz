@@ -16,7 +16,19 @@ async function listDir(dir: string) {
   }
 }
 
-/** Katalogi node_modules pod `root`; nie wchodzi do node_modules, katalogów buildów ani w symlinki. */
+async function hasPackageJson(dir: string): Promise<boolean> {
+  try {
+    await lstat(path.join(dir, 'package.json'))
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Katalogi node_modules projektów (z package.json obok) pod `root`.
+ * Nie wchodzi do node_modules, katalogów buildów, ukrytych katalogów, Library ani w symlinki.
+ */
 export async function findNodeModules(root: string, maxDepth = 5): Promise<string[]> {
   const found: string[] = []
   async function walk(dir: string, depth: number): Promise<void> {
@@ -24,8 +36,11 @@ export async function findNodeModules(root: string, maxDepth = 5): Promise<strin
     for (const entry of await listDir(dir)) {
       if (!entry.isDirectory()) continue // Dirent symlinka nie jest katalogiem
       const full = path.join(dir, entry.name)
-      if (entry.name === 'node_modules') found.push(full)
-      else if (!SKIP_DIRS.has(entry.name)) await walk(full, depth + 1)
+      if (entry.name === 'node_modules') {
+        if (await hasPackageJson(dir)) found.push(full)
+      } else if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith('.') && entry.name !== 'Library') {
+        await walk(full, depth + 1)
+      }
     }
   }
   await walk(root, 1)

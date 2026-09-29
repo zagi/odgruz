@@ -40,12 +40,25 @@ describe('findNodeModules', () => {
     const app = await project('app')
     await mkdir(path.join(app, '.next', 'standalone', 'node_modules'), { recursive: true })
     await mkdir(path.join(root, 'elsewhere', 'node_modules'), { recursive: true })
+    await writeFile(path.join(root, 'elsewhere', 'package.json'), '{}')
     await symlink(path.join(root, 'elsewhere'), path.join(root, 'linked'))
     const found = await findNodeModules(root)
     expect(found).toContain(path.join(app, 'node_modules'))
     expect(found).toContain(path.join(root, 'elsewhere', 'node_modules'))
     expect(found.some((p) => p.includes('.next'))).toBe(false)
     expect(found.some((p) => p.includes('linked'))).toBe(false)
+  })
+})
+
+describe('findNodeModules tool installs', () => {
+  it('ignores hidden dirs, Library and node_modules without a package.json', async () => {
+    const app = await project('app')
+    for (const rel of ['.npm/_npx/abc123', '.vscode/extensions/ms-foo.bar-1.0.0', 'Library/x']) {
+      await mkdir(path.join(root, rel, 'node_modules', 'pkg'), { recursive: true })
+      await writeFile(path.join(root, rel, 'package.json'), '{}')
+    }
+    await mkdir(path.join(root, 'orphan', 'node_modules'), { recursive: true })
+    expect(await findNodeModules(root)).toEqual([path.join(app, 'node_modules')])
   })
 })
 
