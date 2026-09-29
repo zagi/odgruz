@@ -6,6 +6,8 @@ import type { CleanOutcome, SafeRoots, ScanResult } from './types.js'
 
 const run = promisify(execFile)
 
+export const OUTSIDE_ROOTS_ERROR = 'Ścieżka poza dozwolonym obszarem, pominięta'
+
 export type Remover = (p: string) => Promise<void>
 
 /** rm -rf bez podążania za symlinkami; przy EACCES/EPERM nadaje sobie prawo zapisu i próbuje raz jeszcze. */
@@ -32,7 +34,7 @@ export async function clean(
     const outcome: CleanOutcome = { targetId: result.target.id, removed: [], failed: [] }
     for (const { path } of result.items) {
       if (!isSafeToDelete(path, opts.roots)) {
-        outcome.failed.push({ path, error: 'Ścieżka poza dozwolonym obszarem, pominięta' })
+        outcome.failed.push({ path, error: OUTSIDE_ROOTS_ERROR })
         continue
       }
       if (opts.dryRun) {

@@ -1,3 +1,4 @@
+import { OUTSIDE_ROOTS_ERROR } from './clean.js'
 import { escapeHtml, formatBytes, shellQuote } from './format.js'
 import type { CleanOutcome, DiskUsage, ReportData, ScanResult } from './types.js'
 
@@ -50,6 +51,7 @@ export function renderReport(data: ReportData): string {
   const selectedBytes = data.results.filter((r) => byId.has(r.target.id)).reduce((sum, r) => sum + r.totalBytes, 0)
   const freed = Math.max(0, data.after.freeBytes - data.before.freeBytes)
   const failures = data.outcomes.flatMap((o) => o.failed)
+  const sudoable = failures.filter((f) => f.error !== OUTSIDE_ROOTS_ERROR)
 
   const summary = data.dryRun
     ? `Tryb próbny: nic nie zostało usunięte. Zaznaczone pozycje zajmują ${formatBytes(selectedBytes)}.`
@@ -62,8 +64,8 @@ export function renderReport(data: ReportData): string {
   const failureSection = failures.length
     ? `<section>
   <h2>Nie udało się usunąć</h2>
-  <p class="muted">Te ścieżki wymagają uprawnień administratora albo są w użyciu. Możesz usunąć je ręcznie w Terminalu:</p>
-  <pre>${failures.map((f) => escapeHtml(`sudo rm -rf ${shellQuote(f.path)}`)).join('\n')}</pre>
+  <p class="muted">Te ścieżki wymagają uprawnień administratora albo są w użyciu.${sudoable.length ? ' Możesz usunąć je ręcznie w Terminalu:' : ''}</p>
+  ${sudoable.length ? `<pre>${sudoable.map((f) => escapeHtml(`sudo rm -rf ${shellQuote(f.path)}`)).join('\n')}</pre>` : ''}
   <ul>${failures.map((f) => `<li><code>${escapeHtml(f.path)}</code>: ${escapeHtml(f.error)}</li>`).join('')}</ul>
 </section>`
     : ''

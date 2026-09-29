@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { OUTSIDE_ROOTS_ERROR } from '../src/clean.js'
 import { renderReport, reportFileName } from '../src/report.js'
 import type { ReportData, ScanResult } from '../src/types.js'
 
@@ -56,6 +57,14 @@ describe('renderReport', () => {
     )
     expect(html).toContain('Nie usunięto')
     expect(html).toContain('sudo rm -rf &#39;/Users/jan/it&#39;\\&#39;&#39;s&#39;')
+  })
+
+  it('never suggests sudo for guard-rejected paths', () => {
+    const html = renderReport(
+      data({ outcomes: [{ targetId: 'npm', removed: [], failed: [{ path: '/etc/hosts', error: OUTSIDE_ROOTS_ERROR }] }] }),
+    )
+    expect(html).toContain('/etc/hosts')
+    expect(html).not.toContain('sudo rm -rf')
   })
 
   it('escapes file system text', () => {
