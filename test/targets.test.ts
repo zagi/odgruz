@@ -36,7 +36,20 @@ beforeEach(async () => {
 describe('TARGETS', () => {
   it('has unique ids matching the spec', () => {
     expect(TARGETS.map((t) => t.id).sort()).toEqual(
-      ['bun', 'docker-sandboxes', 'games', 'go', 'ios-simulators', 'node-modules', 'npm', 'playwright', 'pnpm', 'python'].sort(),
+      [
+        'bun',
+        'docker-sandboxes',
+        'games',
+        'go',
+        'ios-simulators',
+        'node-modules',
+        'npm',
+        'npx',
+        'playwright',
+        'pnpm',
+        'python',
+        'uv',
+      ].sort(),
     )
   })
 
@@ -44,15 +57,26 @@ describe('TARGETS', () => {
     for (const t of TARGETS) expect(await t.discover(ctx)).toEqual([])
   })
 
-  it('npm skips the _npx dir the CLI runs from', async () => {
+  it('npm returns only _cacache', async () => {
     await touch(ctx.home, '.npm', '_cacache', 'index')
+    await touch(ctx.home, '.npm', '_npx', 'aaa', 'package.json')
+    expect(await target('npm').discover(ctx)).toEqual([path.join(ctx.home, '.npm', '_cacache')])
+  })
+
+  it('npx skips the _npx dir the CLI runs from', async () => {
     await touch(ctx.home, '.npm', '_npx', 'aaa', 'package.json')
     await touch(ctx.home, '.npm', '_npx', 'self', 'node_modules', 'odgruz', 'dist', 'cli.mjs')
     ctx.selfPath = path.join(ctx.home, '.npm', '_npx', 'self', 'node_modules', 'odgruz', 'dist', 'cli.mjs')
-    expect(await target('npm').discover(ctx)).toEqual([
-      path.join(ctx.home, '.npm', '_cacache'),
-      path.join(ctx.home, '.npm', '_npx', 'aaa'),
-    ])
+    expect(await target('npx').discover(ctx)).toEqual([path.join(ctx.home, '.npm', '_npx', 'aaa')])
+  })
+
+  it('splits pip and uv, with uv optional', async () => {
+    await touch(ctx.home, 'Library', 'Caches', 'pip', 'f')
+    await touch(ctx.home, '.cache', 'uv', 'f')
+    expect(await target('python').discover(ctx)).toEqual([path.join(ctx.home, 'Library', 'Caches', 'pip')])
+    expect(await target('uv').discover(ctx)).toEqual([path.join(ctx.home, '.cache', 'uv')])
+    expect(target('npx').category).toBe('optional')
+    expect(target('uv').category).toBe('optional')
   })
 
   it('pnpm keeps the newest store version', async () => {

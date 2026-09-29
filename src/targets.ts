@@ -33,12 +33,18 @@ export const TARGETS: Target[] = [
     label: 'Cache npm',
     category: 'cache',
     impact: 'Paczki pobiorą się ponownie przy następnej instalacji.',
+    discover: (ctx) => existing([home(ctx, '.npm', '_cacache')]),
+  },
+  {
+    id: 'npx',
+    label: 'Pakiety uruchamiane przez npx',
+    category: 'optional',
+    impact: 'Narzędzia uruchamiane przez npx (np. serwery MCP) pobiorą się ponownie. Jeśli któreś właśnie działa, może przestać działać.',
     async discover(ctx) {
       const self = ctx.selfPath
-      const npx = (await children(home(ctx, '.npm', '_npx'))).filter(
+      return (await children(home(ctx, '.npm', '_npx'))).filter(
         (dir) => !(self && (self === dir || self.startsWith(dir + path.sep))),
       )
-      return [...(await existing([home(ctx, '.npm', '_cacache')])), ...npx]
     },
   },
   {
@@ -71,10 +77,17 @@ export const TARGETS: Target[] = [
   },
   {
     id: 'python',
-    label: 'Cache pip i uv',
+    label: 'Cache pip',
     category: 'cache',
     impact: 'Paczki Pythona pobiorą się ponownie.',
-    discover: (ctx) => existing([lib(ctx, 'Caches', 'pip'), home(ctx, '.cache', 'uv')]),
+    discover: (ctx) => existing([lib(ctx, 'Caches', 'pip')]),
+  },
+  {
+    id: 'uv',
+    label: 'Cache uv',
+    category: 'optional',
+    impact: 'Paczki i środowiska uvx (np. serwery MCP) pobiorą się ponownie. Jeśli któreś właśnie działa, może przestać działać.',
+    discover: (ctx) => existing([home(ctx, '.cache', 'uv')]),
   },
   {
     id: 'playwright',
@@ -109,7 +122,7 @@ export const TARGETS: Target[] = [
     id: 'games',
     label: 'Gry: Steam, Whisky, Wineskin',
     category: 'optional',
-    impact: 'Usuwa aplikację Steam, zainstalowane gry i butelki Wine z Whisky.',
+    impact: 'Usuwa aplikację Steam z grami i lokalnymi zapisami (userdata) oraz butelki Whisky razem z zainstalowanymi w nich programami Windows.',
     discover: (ctx) =>
       existing([
         path.join(ctx.appsDir, 'Steam.app'),

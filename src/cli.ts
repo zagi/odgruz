@@ -20,7 +20,7 @@ const HELP = `odgruz: interaktywne sprzątanie dysku na macOS
 Użycie: npx odgruz [opcje]
 
   --dry-run          pokaż, co zostałoby usunięte, niczego nie usuwaj
-  -y, --yes          bez pytań: zaznacz tylko cache (npm, Go, bun, pnpm, pip/uv, Playwright)
+  -y, --yes          bez pytań: zaznacz tylko cache (npm, Go, bun, pnpm, pip, Playwright)
   --projects <dir>   gdzie szukać nieaktywnych projektów (domyślnie ~/projects)
   --days <n>         projekt jest nieaktywny po n dniach bez zmian (domyślnie 30)
   --out <plik>       ścieżka raportu HTML (domyślnie ./odgruz-raport-<data>.html)
