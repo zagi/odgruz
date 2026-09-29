@@ -1,3 +1,7 @@
+import type { TargetId } from './messages/types.js'
+
+export type Locale = 'en' | 'pl'
+
 export interface DiskUsage {
   totalBytes: number
   usedBytes: number
@@ -22,7 +26,7 @@ export interface TargetContext extends SafeRoots {
 }
 
 export interface Target {
-  id: string
+  id: TargetId
   label: string
   category: Category
   impact: string
@@ -43,6 +47,7 @@ export interface ScanResult {
 export interface CleanFailure {
   path: string
   error: string
+  code?: 'outside-roots'
 }
 
 export interface CleanOutcome {

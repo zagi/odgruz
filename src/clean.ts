@@ -2,11 +2,14 @@ import { execFile } from 'node:child_process'
 import { rm } from 'node:fs/promises'
 import { promisify } from 'node:util'
 import { isSafeToDelete } from './paths.js'
-import type { CleanOutcome, SafeRoots, ScanResult } from './types.js'
+import type { CleanFailure, CleanOutcome, SafeRoots, ScanResult } from './types.js'
 
 const run = promisify(execFile)
 
-export const OUTSIDE_ROOTS_ERROR = 'Ścieżka poza dozwolonym obszarem, pominięta'
+/** Niepowodzenia, które użytkownik może naprawić ręcznie (bez odrzuconych przez guard ścieżek). */
+export function removableByHand(failed: CleanFailure[]): CleanFailure[] {
+  return failed.filter((f) => f.code !== 'outside-roots')
+}
 
 export type Remover = (p: string) => Promise<void>
 
@@ -34,7 +37,7 @@ export async function clean(
     const outcome: CleanOutcome = { targetId: result.target.id, removed: [], failed: [] }
     for (const { path } of result.items) {
       if (!isSafeToDelete(path, opts.roots)) {
-        outcome.failed.push({ path, error: OUTSIDE_ROOTS_ERROR })
+        outcome.failed.push({ path, error: '', code: 'outside-roots' })
         continue
       }
       if (opts.dryRun) {
