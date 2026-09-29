@@ -12,21 +12,10 @@ import { getDiskUsage } from './disk.js'
 import { formatBytes } from './format.js'
 import { renderReport, reportFileName } from './report.js'
 import { scan } from './scan.js'
-import { TARGETS } from './targets.js'
-import type { TargetContext } from './types.js'
-
-const HELP = `odgruz: interaktywne sprzątanie dysku na macOS
-
-Użycie: npx odgruz [opcje]
-
-  --dry-run          pokaż, co zostałoby usunięte, niczego nie usuwaj
-  -y, --yes          bez pytań: zaznacz tylko cache (npm, Go, bun, pnpm, pip, Playwright)
-  --projects <dir>   gdzie szukać nieaktywnych projektów (domyślnie ~/projects)
-  --days <n>         projekt jest nieaktywny po n dniach bez zmian (domyślnie 30)
-  --out <plik>       ścieżka raportu HTML (domyślnie ./odgruz-raport-<data>.html)
-  --open             otwórz raport po zakończeniu
-  -h, --help         ta pomoc
-`
+import { detectLocale, parseLangFlag, systemLocale } from './i18n.js'
+import { MESSAGES } from './messages/index.js'
+import { createTargets } from './targets.js'
+import type { Locale, TargetContext } from './types.js'
 
 function safeRealpath(p: string | undefined): string | null {
   if (!p) return null
@@ -46,27 +35,40 @@ async function main(argv: string[]): Promise<number> {
       projects: { type: 'string' },
       days: { type: 'string', default: '30' },
       out: { type: 'string' },
+      lang: { type: 'string' },
       open: { type: 'boolean', default: false },
       help: { type: 'boolean', short: 'h', default: false },
     },
   })
 
+  const detected = detectLocale(process.env, systemLocale())
+  let locale: Locale = detected
+  if (values.lang !== undefined) {
+    const parsed = parseLangFlag(values.lang)
+    if (parsed === null) {
+      console.error(MESSAGES[detected].cli.invalidLang(values.lang))
+      return 1
+    }
+    locale = parsed
+  }
+  const msgs = MESSAGES[locale]
+
   if (values.help) {
-    console.log(HELP)
+    console.log(msgs.help)
     return 0
   }
   if (process.platform !== 'darwin') {
-    console.error('odgruz działa tylko na macOS.')
+    console.error(msgs.cli.macOnly)
     return 1
   }
   const days = Number(values.days)
   if (!Number.isInteger(days) || days < 1) {
-    console.error('--days musi być liczbą całkowitą większą od 0.')
+    console.error(msgs.cli.invalidDays)
     return 1
   }
 
   if (!values.yes && !process.stdin.isTTY) {
-    console.error('Brak terminala interaktywnego. Użyj --yes (tylko cache) albo --dry-run --yes.')
+    console.error(msgs.cli.noTty)
     return 1
   }
 
@@ -81,18 +83,18 @@ async function main(argv: string[]): Promise<number> {
     now: new Date(),
     selfPath: safeRealpath(process.argv[1]),
   }
-  const out = path.resolve(values.out ?? reportFileName(ctx.now))
+  const out = path.resolve(values.out ?? reportFileName(ctx.now, msgs))
   const volume = existsSync('/System/Volumes/Data') ? '/System/Volumes/Data' : '/'
 
-  p.intro(pc.bold(dryRun ? 'odgruz · tryb próbny' : 'odgruz'))
+  p.intro(pc.bold(dryRun ? msgs.cli.introDryRun : 'odgruz'))
   const before = await getDiskUsage(volume)
-  p.log.info(`Wolne miejsce: ${formatBytes(before.freeBytes)} z ${formatBytes(before.totalBytes)}`)
+  p.log.info(msgs.cli.freeSpace(formatBytes(before.freeBytes), formatBytes(before.totalBytes)))
 
   const spinner = p.spinner()
-  spinner.start('Skanuję dysk')
-  const results = await scan(TARGETS, ctx, undefined, (t) => spinner.message(`Skanuję: ${t.label}`))
+  spinner.start(msgs.cli.scanning)
+  const results = await scan(createTargets(msgs), ctx, undefined, (t) => spinner.message(msgs.cli.scanningTarget(t.label)))
   const found = results.reduce((sum, r) => sum + r.totalBytes, 0)
-  spinner.stop(`Znaleziono ${results.length} kategorii, razem ${formatBytes(found)}`)
+  spinner.stop(msgs.cli.found(results.length, formatBytes(found)))
 
   const cacheIds = results.filter((r) => r.target.category === 'cache').map((r) => r.target.id)
   let selected: string[] = []
@@ -100,7 +102,7 @@ async function main(argv: string[]): Promise<number> {
     selected = cacheIds
   } else if (results.length > 0) {
     const choice = await p.multiselect({
-      message: 'Co usunąć? Spacja zaznacza, Enter zatwierdza.',
+      message: msgs.cli.selectPrompt,
       options: results.map((r) => ({
         value: r.target.id,
         label: `${r.target.label} · ${formatBytes(r.totalBytes)}`,
@@ -110,17 +112,17 @@ async function main(argv: string[]): Promise<number> {
       required: false,
     })
     if (p.isCancel(choice)) {
-      p.cancel('Przerwano. Nic nie zostało usunięte.')
+      p.cancel(msgs.cli.cancelled)
       return 0
     }
     selected = choice
     if (selected.length > 0) {
       const total = results.filter((r) => selected.includes(r.target.id)).reduce((sum, r) => sum + r.totalBytes, 0)
       const ok = await p.confirm({
-        message: dryRun ? `Pokazać w raporcie ${formatBytes(total)} do usunięcia?` : `Usunąć ${formatBytes(total)}?`,
+        message: dryRun ? msgs.cli.confirmDryRun(formatBytes(total)) : msgs.cli.confirmDelete(formatBytes(total)),
       })
       if (p.isCancel(ok) || !ok) {
-        p.cancel('Przerwano. Nic nie zostało usunięte.')
+        p.cancel(msgs.cli.cancelled)
         return 0
       }
     }
@@ -130,23 +132,23 @@ async function main(argv: string[]): Promise<number> {
   try {
     await writeFile(out, '')
   } catch (error) {
-    console.error(`Nie mogę zapisać raportu w ${out}: ${(error as Error).message}. Nic nie zostało usunięte.`)
+    console.error(msgs.cli.reportUnwritable(out, (error as Error).message))
     return 1
   }
 
-  spinner.start(dryRun ? 'Tryb próbny…' : 'Usuwam…')
+  spinner.start(dryRun ? msgs.cli.cleaningDryRun : msgs.cli.cleaning)
   const outcomes = await clean(results, selected, { dryRun, roots: ctx })
-  spinner.stop('Gotowe')
+  spinner.stop(msgs.cli.done)
   const after = await getDiskUsage(volume)
-  await writeFile(out, renderReport({ generatedAt: ctx.now, before, after, results, outcomes, dryRun }))
+  await writeFile(out, renderReport({ generatedAt: ctx.now, before, after, results, outcomes, dryRun }, msgs))
 
   const failed = outcomes.flatMap((o) => o.failed)
-  if (failed.length > 0) p.log.warn(`Nie udało się usunąć ${failed.length} ścieżek. Komendy do ręcznego usunięcia są w raporcie.`)
+  if (failed.length > 0) p.log.warn(msgs.cli.failedCount(failed.length))
   const freed = Math.max(0, after.freeBytes - before.freeBytes)
   p.outro(
     dryRun
-      ? `Tryb próbny, nic nie usunięto. Raport: ${out}`
-      : `Zwolniono ${formatBytes(freed)}. Wolne: ${formatBytes(after.freeBytes)}. Raport: ${out}`,
+      ? msgs.cli.outroDryRun(out)
+      : msgs.cli.outro(formatBytes(freed), formatBytes(after.freeBytes), out),
   )
   if (values.open) execFile('open', [out])
   return 0
