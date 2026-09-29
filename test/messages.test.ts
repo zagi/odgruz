@@ -89,6 +89,8 @@ describe('MESSAGES', () => {
     expect(MESSAGES.pl.report.status.removed).toBe('Usunięte')
     expect(MESSAGES.pl.help).toContain('--lang <en|pl>')
     expect(MESSAGES.en.help).toContain('--lang <en|pl>')
+    expect(MESSAGES.en.help).toContain('interface language (default: from your locale settings)')
+    expect(MESSAGES.pl.help).toContain('język interfejsu (domyślnie wg ustawień języka)')
   })
 })
 

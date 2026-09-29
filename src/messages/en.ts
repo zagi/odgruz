@@ -14,7 +14,7 @@ Usage: npx odgruz [options]
   --projects <dir>   where to look for inactive projects (default ~/projects)
   --days <n>         a project is inactive after n days without changes (default 30)
   --out <file>       path of the HTML report (default ./odgruz-report-<date>.html)
-  --lang <en|pl>     interface language (default: from the system locale)
+  --lang <en|pl>     interface language (default: from your locale settings)
   --open             open the report when finished
   -h, --help         this help
 `,

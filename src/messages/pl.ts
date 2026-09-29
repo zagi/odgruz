@@ -23,7 +23,7 @@ Użycie: npx odgruz [opcje]
   --projects <dir>   gdzie szukać nieaktywnych projektów (domyślnie ~/projects)
   --days <n>         projekt jest nieaktywny po n dniach bez zmian (domyślnie 30)
   --out <plik>       ścieżka raportu HTML (domyślnie ./odgruz-raport-<data>.html)
-  --lang <en|pl>     język interfejsu (domyślnie wg locale systemu)
+  --lang <en|pl>     język interfejsu (domyślnie wg ustawień języka)
   --open             otwórz raport po zakończeniu
   -h, --help         ta pomoc
 `,
