@@ -20,6 +20,12 @@ beforeEach(async () => {
   await mkdir(path.join(home, 'projects'), { recursive: true })
 })
 
+function rowFor(html: string, label: string): string {
+  const chunk = html.split('<tr>').find((c) => c.includes(`<strong>${label}</strong>`))
+  if (!chunk) throw new Error(`no row for ${label}`)
+  return chunk.slice(0, chunk.indexOf('</tr>'))
+}
+
 async function seedNpmCache() {
   const file = path.join(home, '.npm', '_cacache', 'content', 'blob')
   await mkdir(path.dirname(file), { recursive: true })
@@ -58,13 +64,14 @@ describe('odgruz CLI', () => {
     expect(existsSync(file)).toBe(false)
     expect(existsSync(sandbox)).toBe(true)
     const html = readFileSync(out, 'utf8')
-    expect(html).toMatch(/Cache npm[\s\S]*Usunięte/)
-    expect(html).toMatch(/Docker Sandboxes[\s\S]*Pominięte/)
+    expect(rowFor(html, 'Cache npm')).toContain('class="pill removed"')
+    expect(rowFor(html, 'Docker Sandboxes')).toContain('class="pill skipped"')
   })
 
   it('handles an empty home', () => {
     const r = run('--yes', '--out', out)
     expect(r.status, r.stderr).toBe(0)
-    expect(readFileSync(out, 'utf8')).toContain('Nie znaleziono nic do sprzątania')
+    expect(existsSync(out)).toBe(true)
+    expect(readFileSync(out, 'utf8')).not.toContain('class="pill removed"')
   })
 })

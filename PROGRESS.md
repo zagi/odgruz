@@ -8,4 +8,4 @@ Plan: docs/superpowers/plans/2026-09-29-odgruz.md · Issue: #1 · Gałąź: feat
 - [x] Task 4: targets, scan
 - [x] Task 5: clean
 - [x] Task 6: report
-- [x] Task 7: cli, e2e, CI, README, PR
+- [ ] Task 7: cli, e2e, CI, README done; PR pending
