@@ -1,3 +1,5 @@
+export type Locale = 'en' | 'pl'
+
 export interface DiskUsage {
   totalBytes: number
   usedBytes: number
