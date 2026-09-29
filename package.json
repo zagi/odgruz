@@ -1,13 +1,23 @@
 {
   "name": "odgruz",
   "version": "0.1.0",
-  "description": "Interaktywne sprzątanie dysku na macOS z raportem HTML przed i po",
+  "description": "Interactive disk cleanup for macOS with a before/after HTML report",
+  "keywords": [
+    "macos",
+    "disk",
+    "cleanup",
+    "cache",
+    "node_modules",
+    "cli"
+  ],
+  "repository": "github:zagi/odgruz",
   "type": "module",
   "bin": {
     "odgruz": "dist/cli.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "README-PL.md"
   ],
   "engines": {
     "node": ">=20.12"
