@@ -41,7 +41,7 @@ async function main(argv: string[]): Promise<number> {
     },
   })
 
-  const detected = detectLocale(process.env, systemLocale())
+  const detected = detectLocale(process.env, await systemLocale())
   let locale: Locale = detected
   if (values.lang !== undefined) {
     const parsed = parseLangFlag(values.lang)

@@ -50,9 +50,9 @@ The default is English. Polish is used when the detected locale starts with `pl`
 2. `LC_ALL`
 3. `LC_MESSAGES`
 4. `LANG`
-5. The system locale
+5. The first language in macOS System Settings → General → Language & Region (`AppleLanguages`); if it cannot be read, the runtime's default locale
 
-`C`, `POSIX` and `C.*` (for example `C.UTF-8`) are skipped like empty values, so the system language decides. macOS terminals often set `LANG=C.UTF-8`, which must not override a Polish system language.
+`C`, `POSIX` and `C.*` (for example `C.UTF-8`) are skipped like empty values, so the next source decides. macOS terminals often set `LANG=C.UTF-8`, which must not override a Polish system language.
 
 `--lang` accepts only `en` or `pl`. Any other value prints an error and exits with code 1.
 

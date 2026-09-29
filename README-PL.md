@@ -50,9 +50,9 @@ Domyślnie angielski. Polski włącza się, gdy wykryte locale zaczyna się od `
 2. `LC_ALL`
 3. `LC_MESSAGES`
 4. `LANG`
-5. Locale systemu
+5. Pierwszy język z Ustawień systemowych macOS → Ogólne → Język i region (`AppleLanguages`); gdy nie da się go odczytać, domyślne locale środowiska uruchomieniowego
 
-`C`, `POSIX` i `C.*` (np. `C.UTF-8`) są pomijane jak puste wartości, więc decyduje język systemu. Terminale macOS często ustawiają `LANG=C.UTF-8`, co nie może nadpisywać polskiego języka systemu.
+`C`, `POSIX` i `C.*` (np. `C.UTF-8`) są pomijane jak puste wartości, więc decyduje kolejne źródło. Terminale macOS często ustawiają `LANG=C.UTF-8`, co nie może nadpisywać polskiego języka systemu.
 
 `--lang` przyjmuje tylko `en` lub `pl`. Inna wartość wypisuje błąd i kończy program kodem 1.
 

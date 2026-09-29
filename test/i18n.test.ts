@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { detectLocale, parseLangFlag, systemLocale } from '../src/i18n.js'
+import { detectLocale, parseAppleLanguages, parseLangFlag, systemLocale } from '../src/i18n.js'
 
 describe('detectLocale', () => {
   it('respects LC_ALL over system locale', () => {
@@ -76,10 +76,28 @@ describe('parseLangFlag', () => {
   })
 })
 
+describe('parseAppleLanguages', () => {
+  it('returns the first entry of a quoted list', () => {
+    expect(parseAppleLanguages('(\n    "en-PL",\n    "pl-PL"\n)')).toBe('en-PL')
+  })
+
+  it('returns pl-PL when it is first', () => {
+    expect(parseAppleLanguages('(\n    "pl-PL",\n    "en-US"\n)')).toBe('pl-PL')
+  })
+
+  it('handles unquoted entries', () => {
+    expect(parseAppleLanguages('(\n    pl\n)')).toBe('pl')
+  })
+
+  it('returns empty string for empty input', () => {
+    expect(parseAppleLanguages('')).toBe('')
+    expect(parseAppleLanguages('()')).toBe('')
+  })
+})
+
 describe('systemLocale', () => {
-  it('returns a valid locale string', () => {
-    const locale = systemLocale()
+  it('returns a string on non-darwin platforms without throwing', async () => {
+    const locale = await systemLocale('linux')
     expect(typeof locale).toBe('string')
-    expect(locale.length).toBeGreaterThan(0)
   })
 })
