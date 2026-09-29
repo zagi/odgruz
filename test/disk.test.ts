@@ -16,7 +16,7 @@ describe('parseDf', () => {
   })
 
   it('throws on unexpected output', () => {
-    expect(() => parseDf('garbage')).toThrow('Nieoczekiwany wynik df')
+    expect(() => parseDf('garbage')).toThrow('Unexpected df output')
   })
 })
 

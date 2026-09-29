@@ -7,7 +7,7 @@ const run = promisify(execFile)
 export function parseDf(stdout: string): DiskUsage {
   const lines = stdout.trim().split('\n')
   const cols = lines.length >= 2 ? lines[lines.length - 1].trim().split(/\s+/) : []
-  if (cols.length < 6) throw new Error('Nieoczekiwany wynik df')
+  if (cols.length < 6) throw new Error('Unexpected df output')
   const [, total, used, available] = cols
   return {
     totalBytes: Number(total) * 1024,
