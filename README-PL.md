@@ -44,13 +44,15 @@ Kategorie z grupy cache są zaznaczone domyślnie na liście i tylko je usuwa `-
 
 ## Język
 
-Domyślnie angielski. Polski włącza się, gdy wykryte locale zaczyna się od `pl` (bez rozróżniania wielkości liter) albo gdy podasz `--lang pl`. Wygrywa pierwsze źródło, które jest ustawione i niepuste:
+Domyślnie angielski. Polski włącza się, gdy wykryte locale zaczyna się od `pl` (bez rozróżniania wielkości liter) albo gdy podasz `--lang pl`. Wygrywa pierwsze źródło, które jest ustawione, niepuste i inne niż C/POSIX:
 
 1. `--lang`
 2. `LC_ALL`
 3. `LC_MESSAGES`
-4. `LANG` (`C` i `POSIX` oznaczają angielski)
+4. `LANG`
 5. Locale systemu
+
+`C`, `POSIX` i `C.*` (np. `C.UTF-8`) są pomijane jak puste wartości, więc decyduje język systemu. Terminale macOS często ustawiają `LANG=C.UTF-8`, co nie może nadpisywać polskiego języka systemu.
 
 `--lang` przyjmuje tylko `en` lub `pl`. Inna wartość wypisuje błąd i kończy program kodem 1.
 

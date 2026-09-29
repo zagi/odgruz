@@ -44,13 +44,15 @@ Categories marked "cache" are preselected in the interactive list and are the on
 
 ## Language
 
-The default is English. Polish is used when the detected locale starts with `pl` (case-insensitive) or when you pass `--lang pl`. The first source that is set and non-empty wins:
+The default is English. Polish is used when the detected locale starts with `pl` (case-insensitive) or when you pass `--lang pl`. The first source that is set, non-empty and not the C/POSIX locale wins:
 
 1. `--lang`
 2. `LC_ALL`
 3. `LC_MESSAGES`
-4. `LANG` (`C` and `POSIX` count as English)
+4. `LANG`
 5. The system locale
+
+`C`, `POSIX` and `C.*` (for example `C.UTF-8`) are skipped like empty values, so the system language decides. macOS terminals often set `LANG=C.UTF-8`, which must not override a Polish system language.
 
 `--lang` accepts only `en` or `pl`. Any other value prints an error and exits with code 1.
 

@@ -18,12 +18,25 @@ describe('detectLocale', () => {
     expect(detectLocale({ LANG: 'pl_PL.UTF-8' }, 'en-US')).toBe('pl')
   })
 
-  it('treats C as English', () => {
-    expect(detectLocale({ LANG: 'C' }, 'pl-PL')).toBe('en')
+  it('skips C and falls through to the system locale', () => {
+    expect(detectLocale({ LANG: 'C' }, 'pl-PL')).toBe('pl')
   })
 
-  it('treats POSIX as English', () => {
-    expect(detectLocale({ LANG: 'POSIX' }, 'pl-PL')).toBe('en')
+  it('skips POSIX and falls through to the system locale', () => {
+    expect(detectLocale({ LANG: 'POSIX' }, 'pl-PL')).toBe('pl')
+  })
+
+  it('skips C.UTF-8 and falls through to the system locale', () => {
+    expect(detectLocale({ LANG: 'C.UTF-8' }, 'pl-PL')).toBe('pl')
+    expect(detectLocale({ LANG: 'C.UTF-8' }, 'en-US')).toBe('en')
+  })
+
+  it('skips C in LC_ALL and uses the next variable', () => {
+    expect(detectLocale({ LC_ALL: 'C', LANG: 'pl_PL.UTF-8' }, 'en-US')).toBe('pl')
+  })
+
+  it('does not treat ca_ES (Catalan) as C', () => {
+    expect(detectLocale({ LANG: 'ca_ES.UTF-8' }, 'pl-PL')).toBe('en')
   })
 
   it('falls back to system locale when no env vars set', () => {
