@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { scan } from '../src/scan.js'
+import type { TargetId } from '../src/messages/types.js'
 import type { Target, TargetContext } from '../src/types.js'
 
 const ctx: TargetContext = {
@@ -13,7 +14,7 @@ const ctx: TargetContext = {
 }
 
 function fake(id: string, paths: string[]): Target {
-  return { id, label: id, category: 'cache', impact: '', discover: async () => paths }
+  return { id: id as TargetId, label: id, category: 'cache', impact: '', discover: async () => paths }
 }
 
 const sizes: Record<string, number> = { '/Users/jan/.a/x': 100, '/Users/jan/.a/y': 50, '/Users/jan/.b/z': 0 }

@@ -2,8 +2,11 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { TARGETS } from '../src/targets.js'
+import { MESSAGES } from '../src/messages/index.js'
+import { createTargets } from '../src/targets.js'
 import type { TargetContext } from '../src/types.js'
+
+const TARGETS = createTargets(MESSAGES.pl)
 
 let ctx: TargetContext
 

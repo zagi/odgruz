@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clean } from '../src/clean.js'
+import type { TargetId } from '../src/messages/types.js'
 import type { SafeRoots, ScanResult } from '../src/types.js'
 
 let roots: SafeRoots
@@ -11,7 +12,7 @@ const readOnly: string[] = []
 
 function result(id: string, paths: string[]): ScanResult {
   return {
-    target: { id, label: id, category: 'cache', impact: '', discover: async () => paths },
+    target: { id: id as TargetId, label: id, category: 'cache', impact: '', discover: async () => paths },
     items: paths.map((p) => ({ path: p, bytes: 1 })),
     totalBytes: paths.length,
   }
@@ -75,7 +76,7 @@ describe('clean', () => {
     const outside = await mkdtemp(path.join(tmpdir(), 'odgruz-outside-'))
     const outcomes = await clean([result('x', [outside])], ['x'], { dryRun: false, roots })
     expect(existsSync(outside)).toBe(true)
-    expect(outcomes[0].failed[0].path).toBe(outside)
+    expect(outcomes[0].failed).toEqual([{ path: outside, error: '', code: 'outside-roots' }])
   })
 
   it('removes a symlink without touching its target', async () => {
