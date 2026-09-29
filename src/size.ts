@@ -8,10 +8,10 @@ function parseKb(stdout: string | undefined): number {
   return Number.isFinite(kb) ? kb * 1024 : 0
 }
 
-/** Rozmiar w bajtach według `du -sk` (bez podążania za symlinkami). 0 gdy ścieżka nie istnieje. */
+/** Rozmiar w bajtach według `du -skx` (bez symlinków i bez przekraczania punktów montowania). 0 gdy ścieżka nie istnieje. */
 export async function sizeOf(path: string): Promise<number> {
   try {
-    const { stdout } = await run('du', ['-sk', path], { maxBuffer: 16 * 1024 * 1024 })
+    const { stdout } = await run('du', ['-skx', path], { maxBuffer: 16 * 1024 * 1024 })
     return parseKb(stdout)
   } catch (error) {
     // du kończy się kodem 1 przy "Permission denied", ale i tak wypisuje sumę
